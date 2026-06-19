@@ -89,6 +89,8 @@ Cheapest. You have the SQL text and nothing else.
 | Lookup join for external dimension | high | sql | [open](sql/lookup-join.md) |
 | Append kafka, not upsert-kafka | medium | sql | [open](sql/append-not-upsert-kafka.md) |
 | Align sink PK with upsert key | high | sql | [open](sql/align-sink-pk.md) |
+| Preserve upsert key in join | high | sql | [open](sql/preserve-upsert-key-in-join.md) |
+| Sink ON CONFLICT clause | medium | sql | [open](sql/sink-on-conflict.md) |
 | Window / time join needs watermark | high | sql | [open](sql/require-watermark.md) |
 
 ## Plan rules

@@ -24,7 +24,7 @@ Make sink `PRIMARY KEY` match the query's upsert key:
 - dedup -> sink PK = PARTITION BY key
 - align so the materializer disappear from plan
 
-See [sink-upsert-materializer](../plan/sink-upsert-materializer.md) to spot the operator.
+For joins that drop the upsert key, see [preserve-upsert-key-in-join](preserve-upsert-key-in-join.md). To spot the operator in the plan, see [sink-upsert-materializer](../plan/sink-upsert-materializer.md). On Flink 2.3+ a mismatch fails planning until fixed or a clause is declared - see [sink-on-conflict](sink-on-conflict.md).
 
 ## Example
 
