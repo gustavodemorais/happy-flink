@@ -1,0 +1,28 @@
+== Abstract Syntax Tree ==
+LogicalSink(table=[default_catalog.default_database.enriched_orders_fixed], fields=[user_id, order_id, other_data])
++- LogicalProject(user_id=[$3], order_id=[$2], other_data=[$1])
+   +- LogicalJoin(condition=[=($3, $0)], joinType=[inner])
+      :- LogicalTableScan(table=[[default_catalog, default_database, users]])
+      +- LogicalTableScan(table=[[default_catalog, default_database, orders_with_composite_key]])
+
+== Optimized Physical Plan ==
+Sink(table=[default_catalog.default_database.enriched_orders_fixed], fields=[user_id, order_id, other_data])
++- Calc(select=[user_id0 AS user_id, order_id, other_data])
+   +- Join(joinType=[InnerJoin], where=[=(user_id0, user_id)], select=[user_id, other_data, order_id, user_id0], leftInputSpec=[JoinKeyContainsUniqueKey], rightInputSpec=[HasUniqueKey])
+      :- Exchange(distribution=[hash[user_id]])
+      :  +- DropUpdateBefore
+      :     +- TableSourceScan(table=[[default_catalog, default_database, users]], fields=[user_id, other_data])
+      +- Exchange(distribution=[hash[user_id]])
+         +- DropUpdateBefore
+            +- TableSourceScan(table=[[default_catalog, default_database, orders_with_composite_key, project=[order_id, user_id], metadata=[]]], fields=[order_id, user_id])
+
+== Optimized Execution Plan ==
+Sink(table=[default_catalog.default_database.enriched_orders_fixed], fields=[user_id, order_id, other_data])
++- Calc(select=[user_id0 AS user_id, order_id, other_data])
+   +- Join(joinType=[InnerJoin], where=[(user_id0 = user_id)], select=[user_id, other_data, order_id, user_id0], leftInputSpec=[JoinKeyContainsUniqueKey], rightInputSpec=[HasUniqueKey])
+      :- Exchange(distribution=[hash[user_id]])
+      :  +- DropUpdateBefore
+      :     +- TableSourceScan(table=[[default_catalog, default_database, users]], fields=[user_id, other_data])
+      +- Exchange(distribution=[hash[user_id]])
+         +- DropUpdateBefore
+            +- TableSourceScan(table=[[default_catalog, default_database, orders_with_composite_key, project=[order_id, user_id], metadata=[]]], fields=[order_id, user_id])
