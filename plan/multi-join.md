@@ -7,6 +7,7 @@
 | **Requires** | plan |
 | **Operators** | Join |
 | **Match** | Multiple Join nodes chained in plan |
+| **Flink version** | 2.1+ for the MultiJoin operator fix; bounding joins works on any version |
 
 ## Problem
 

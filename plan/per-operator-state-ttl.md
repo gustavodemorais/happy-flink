@@ -7,6 +7,7 @@
 | **Requires** | plan |
 | **Operators** | Join, GroupAggregate |
 | **Match** | Asymmetric stateful ops sharing one global TTL; join sides need different retention |
+| **Flink version** | 1.19+ (STATE_TTL hint, FLIP-373) |
 
 ## Problem
 

@@ -36,6 +36,7 @@ No `rules/` wrapper. Folder at root. Name = input level rule need.
 | **Requires** | sql | plan | compiled-plan | job | runtime-metrics |
 | **Operators** | Flink operator names this rule matches |
 | **Match** | one line: when this rule fires |
+| **Flink version** | optional. add only if fix need specific Flink version (e.g. `2.1+`). omit when version-agnostic (most SQL rules). |
 
 ## Problem
 What wrong.

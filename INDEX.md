@@ -19,6 +19,8 @@ runtime metrics - and asks for help:
 - If a fix you recommend depends on something missing from the input (for
   example, a time-based join or window needs a watermark but no `WATERMARK` is
   defined), treat that as its own problem - do not silently assume it.
+- If a rule has a `Flink version` field, the fix needs that version. Surface it
+  with the fix so the user knows the requirement.
 
 **2. Write the report in this structure:**
 
