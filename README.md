@@ -23,6 +23,22 @@ You run Flink SQL or Table API and want to know why a job is slow or why its sta
 
 Cheaper inputs catch less; richer inputs catch more.
 
+## Example
+
+Point your AI at `INDEX.md` and ask:
+
+> Read INDEX.md and help me with this query.
+>
+> ```sql
+> SELECT * FROM customers c JOIN orders o ON c.customer_id = o.customer_id;
+> ```
+
+It will spot that this is a regular join with no time bound - both sides stay in
+state forever - and walk you through the fix (a temporal join, since `customers`
+is a dimension), plus the watermark you need to make that fix work.
+
+See [examples/](examples/) for full runs with SQL, compiled plan, and saved output.
+
 ## License
 
 MIT. See [LICENSE](LICENSE).
