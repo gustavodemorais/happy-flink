@@ -14,7 +14,7 @@ Stream joined to a dimension / versioned table with plain regular join. Both sid
 
 ## Why it hurts
 
-Regular join state unbounded both sides. Real case: ~780GB join state, dropped to <4GB after switch to temporal. Dim table grow forever in state when only latest version per key needed.
+Regular join state unbounded both sides. Switch to temporal cut join state dramatically - from huge to small. Dim table grow forever in state when only latest version per key needed.
 
 ## How to fix
 

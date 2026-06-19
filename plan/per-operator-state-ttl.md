@@ -15,7 +15,7 @@ Job set one global `table.exec.state.ttl`. But different operators (or two sides
 
 ## Why it hurts
 
-Global TTL too long for the short-lived side = wasted state. Too short for the long-lived side = drop state still needed, wrong result. Real case: per-side TTL cut 5.8TB state to 590GB.
+Global TTL too long for the short-lived side = wasted state. Too short for the long-lived side = drop state still needed, wrong result. Per-side TTL can cut total join state dramatically.
 
 ## How to fix
 

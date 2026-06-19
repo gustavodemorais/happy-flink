@@ -49,7 +49,7 @@ Fix: give the join a bound - temporal (Path A), interval, or TTL (Path C). See [
 
 Where: SQL line 19, `customers c JOIN orders o ON c.customer_id = o.customer_id`. `customers` (customer_id, name) is a dimension; `orders` carries the event time `order_time` - classic fact-enriches-from-dim.
 
-Why it hurts: regular join stores all dim versions forever. The temporal-join rule cites a real case: ~780 GB join state dropped to <4 GB after switching to a temporal join, because only the latest version per key is kept.
+Why it hurts: regular join stores all dim versions forever. The temporal-join rule notes switching to a temporal join can cut join state dramatically, from huge to small, because only the latest version per key is kept.
 
 Fix: event-time temporal join with `orders` as probe side and `customers` as a versioned table (PK = `customer_id` + event-time watermark).
 

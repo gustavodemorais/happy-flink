@@ -14,7 +14,7 @@
 
 ## Why it hurts
 
-Each `CASE WHEN` distinct keep own state map of seen values. Same `user_id` tracked many times over. More state, more CPU. Roughly 2x slower vs shared state.
+Each `CASE WHEN` distinct keep own state map of seen values. Same `user_id` tracked many times over. More state, more CPU. Markedly slower vs shared state.
 
 ## How to fix
 
