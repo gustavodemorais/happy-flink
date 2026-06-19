@@ -21,7 +21,7 @@ Regular join state unbounded both sides. Real case: ~780GB join state, dropped t
 Use event-time temporal join. `FOR SYSTEM_TIME AS OF`. Right side keep only the version matching left row event time. Old versions drop. Needs:
 
 - versioned table (primary key + event-time watermark) on right side
-- watermark on both sides
+- watermark on both sides - if input has no `WATERMARK`, fix that first. See [require-watermark](require-watermark.md).
 - PK of dim in join condition
 
 See also [lookup-join](lookup-join.md) when dim lives in external system, [join-unbounded-state](../plan/join-unbounded-state.md) for the general bound.

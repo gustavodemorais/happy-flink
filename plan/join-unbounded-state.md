@@ -25,6 +25,8 @@ Pick one:
 - **Lookup join** - right side is external table, no Flink state. `FOR SYSTEM_TIME AS OF a.proctime`
 - **State TTL** - if regular join must stay, set `table.exec.state.ttl`. State drop after idle time. Risk: drop too early = miss late match. See [state-ttl](state-ttl.md).
 
+Interval and temporal join need a watermark on the time attribute. If the input has no `WATERMARK`, fix that first. See [require-watermark](../sql/require-watermark.md).
+
 Check `EXPLAIN` - `Join(joinType=...)` with no time attribute = regular join, unbounded.
 
 ## Example

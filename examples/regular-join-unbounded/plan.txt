@@ -1,0 +1,19 @@
+== Abstract Syntax Tree ==
+LogicalProject(customer_id=[$0], name=[$1], order_id=[$2], customer_id0=[$3], amount=[$4], order_time=[$5])
++- LogicalJoin(condition=[=($0, $3)], joinType=[inner])
+   :- LogicalTableScan(table=[[default_catalog, default_database, customers]])
+   +- LogicalTableScan(table=[[default_catalog, default_database, orders]])
+
+== Optimized Physical Plan ==
+Join(joinType=[InnerJoin], where=[=(customer_id, customer_id0)], select=[customer_id, name, order_id, customer_id0, amount, order_time], leftInputSpec=[NoUniqueKey], rightInputSpec=[NoUniqueKey])
+:- Exchange(distribution=[hash[customer_id]])
+:  +- TableSourceScan(table=[[default_catalog, default_database, customers]], fields=[customer_id, name])
++- Exchange(distribution=[hash[customer_id]])
+   +- TableSourceScan(table=[[default_catalog, default_database, orders]], fields=[order_id, customer_id, amount, order_time])
+
+== Optimized Execution Plan ==
+Join(joinType=[InnerJoin], where=[(customer_id = customer_id0)], select=[customer_id, name, order_id, customer_id0, amount, order_time], leftInputSpec=[NoUniqueKey], rightInputSpec=[NoUniqueKey])
+:- Exchange(distribution=[hash[customer_id]])
+:  +- TableSourceScan(table=[[default_catalog, default_database, customers]], fields=[customer_id, name])
++- Exchange(distribution=[hash[customer_id]])
+   +- TableSourceScan(table=[[default_catalog, default_database, orders]], fields=[order_id, customer_id, amount, order_time])

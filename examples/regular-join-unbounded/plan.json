@@ -1,0 +1,208 @@
+{
+  "flinkVersion" : "2.4",
+  "nodes" : [ {
+    "id" : 6,
+    "type" : "stream-exec-table-source-scan_2",
+    "scanTableSource" : {
+      "table" : {
+        "identifier" : "`default_catalog`.`default_database`.`customers`",
+        "resolvedTable" : {
+          "schema" : {
+            "columns" : [ {
+              "name" : "customer_id",
+              "dataType" : "BIGINT"
+            }, {
+              "name" : "name",
+              "dataType" : "VARCHAR(2147483647)"
+            } ]
+          },
+          "options" : {
+            "bounded" : "false",
+            "connector" : "values"
+          }
+        }
+      }
+    },
+    "outputType" : "ROW<`customer_id` BIGINT, `name` VARCHAR(2147483647)>",
+    "description" : "TableSourceScan(table=[[default_catalog, default_database, customers]], fields=[customer_id, name])"
+  }, {
+    "id" : 7,
+    "type" : "stream-exec-exchange_1",
+    "inputProperties" : [ {
+      "requiredDistribution" : {
+        "type" : "HASH",
+        "keys" : [ 0 ]
+      },
+      "damBehavior" : "PIPELINED",
+      "priority" : 0
+    } ],
+    "outputType" : "ROW<`customer_id` BIGINT, `name` VARCHAR(2147483647)>",
+    "description" : "Exchange(distribution=[hash[customer_id]])"
+  }, {
+    "id" : 8,
+    "type" : "stream-exec-table-source-scan_2",
+    "scanTableSource" : {
+      "table" : {
+        "identifier" : "`default_catalog`.`default_database`.`orders`",
+        "resolvedTable" : {
+          "schema" : {
+            "columns" : [ {
+              "name" : "order_id",
+              "dataType" : "BIGINT"
+            }, {
+              "name" : "customer_id",
+              "dataType" : "BIGINT"
+            }, {
+              "name" : "amount",
+              "dataType" : "INT"
+            }, {
+              "name" : "order_time",
+              "dataType" : "TIMESTAMP(3)"
+            } ]
+          },
+          "options" : {
+            "bounded" : "false",
+            "connector" : "values"
+          }
+        }
+      }
+    },
+    "outputType" : "ROW<`order_id` BIGINT, `customer_id` BIGINT, `amount` INT, `order_time` TIMESTAMP(3)>",
+    "description" : "TableSourceScan(table=[[default_catalog, default_database, orders]], fields=[order_id, customer_id, amount, order_time])"
+  }, {
+    "id" : 9,
+    "type" : "stream-exec-exchange_1",
+    "inputProperties" : [ {
+      "requiredDistribution" : {
+        "type" : "HASH",
+        "keys" : [ 1 ]
+      },
+      "damBehavior" : "PIPELINED",
+      "priority" : 0
+    } ],
+    "outputType" : "ROW<`order_id` BIGINT, `customer_id` BIGINT, `amount` INT, `order_time` TIMESTAMP(3)>",
+    "description" : "Exchange(distribution=[hash[customer_id]])"
+  }, {
+    "id" : 10,
+    "type" : "stream-exec-join_1",
+    "joinSpec" : {
+      "joinType" : "INNER",
+      "leftKeys" : [ 0 ],
+      "rightKeys" : [ 1 ],
+      "filterNulls" : [ true ],
+      "nonEquiCondition" : null
+    },
+    "state" : [ {
+      "index" : 0,
+      "ttl" : "0 ms",
+      "name" : "leftState"
+    }, {
+      "index" : 1,
+      "ttl" : "0 ms",
+      "name" : "rightState"
+    } ],
+    "inputProperties" : [ {
+      "requiredDistribution" : {
+        "type" : "UNKNOWN"
+      },
+      "damBehavior" : "PIPELINED",
+      "priority" : 0
+    }, {
+      "requiredDistribution" : {
+        "type" : "UNKNOWN"
+      },
+      "damBehavior" : "PIPELINED",
+      "priority" : 0
+    } ],
+    "outputType" : "ROW<`customer_id` BIGINT, `name` VARCHAR(2147483647), `order_id` BIGINT, `customer_id0` BIGINT, `amount` INT, `order_time` TIMESTAMP(3)>",
+    "description" : "Join(joinType=[InnerJoin], where=[(customer_id = customer_id0)], select=[customer_id, name, order_id, customer_id0, amount, order_time], leftInputSpec=[NoUniqueKey], rightInputSpec=[NoUniqueKey])"
+  }, {
+    "id" : 11,
+    "type" : "stream-exec-sink_2",
+    "configuration" : {
+      "table.exec.sink.keyed-shuffle" : "AUTO",
+      "table.exec.sink.not-null-enforcer" : "ERROR",
+      "table.exec.sink.rowtime-inserter" : "ENABLED",
+      "table.exec.sink.type-length-enforcer" : "IGNORE",
+      "table.exec.sink.upsert-materialize" : "AUTO"
+    },
+    "dynamicTableSink" : {
+      "table" : {
+        "identifier" : "`default_catalog`.`default_database`.`sink`",
+        "resolvedTable" : {
+          "schema" : {
+            "columns" : [ {
+              "name" : "customer_id",
+              "dataType" : "BIGINT"
+            }, {
+              "name" : "name",
+              "dataType" : "VARCHAR(2147483647)"
+            }, {
+              "name" : "order_id",
+              "dataType" : "BIGINT"
+            }, {
+              "name" : "customer_id0",
+              "dataType" : "BIGINT"
+            }, {
+              "name" : "amount",
+              "dataType" : "INT"
+            }, {
+              "name" : "order_time",
+              "dataType" : "TIMESTAMP(3)"
+            } ]
+          },
+          "options" : {
+            "connector" : "values",
+            "table-sink-class" : "DEFAULT"
+          }
+        }
+      }
+    },
+    "inputChangelogMode" : [ "INSERT" ],
+    "inputProperties" : [ {
+      "requiredDistribution" : {
+        "type" : "UNKNOWN"
+      },
+      "damBehavior" : "PIPELINED",
+      "priority" : 0
+    } ],
+    "outputType" : "ROW<`customer_id` BIGINT, `name` VARCHAR(2147483647), `order_id` BIGINT, `customer_id0` BIGINT, `amount` INT, `order_time` TIMESTAMP(3)>",
+    "description" : "Sink(table=[default_catalog.default_database.sink], fields=[customer_id, name, order_id, customer_id0, amount, order_time])"
+  } ],
+  "edges" : [ {
+    "source" : 6,
+    "target" : 7,
+    "shuffle" : {
+      "type" : "FORWARD"
+    },
+    "shuffleMode" : "PIPELINED"
+  }, {
+    "source" : 8,
+    "target" : 9,
+    "shuffle" : {
+      "type" : "FORWARD"
+    },
+    "shuffleMode" : "PIPELINED"
+  }, {
+    "source" : 7,
+    "target" : 10,
+    "shuffle" : {
+      "type" : "FORWARD"
+    },
+    "shuffleMode" : "PIPELINED"
+  }, {
+    "source" : 9,
+    "target" : 10,
+    "shuffle" : {
+      "type" : "FORWARD"
+    },
+    "shuffleMode" : "PIPELINED"
+  }, {
+    "source" : 10,
+    "target" : 11,
+    "shuffle" : {
+      "type" : "FORWARD"
+    },
+    "shuffleMode" : "PIPELINED"
+  } ]
+}

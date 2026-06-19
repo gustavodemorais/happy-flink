@@ -2,6 +2,71 @@
 
 The full map of Flink SQL optimization rules. Pick rules by the data you have.
 
+## How to review (read this first)
+
+If a user hands you a Flink SQL query - optionally with its compiled plan or
+runtime metrics - and asks for help:
+
+**1. Analyze.**
+
+- Pick the rule tables below by the data you have:
+  - only SQL text -> SQL rules
+  - an EXPLAIN / compiled plan -> SQL + Plan rules
+  - a live job with metrics -> all three
+- Open the rule files that look relevant and check the input against them.
+- For every problem, note: the rule, where it shows up in the input (SQL line
+  or plan node), the fix, and why it matters.
+- If a fix you recommend depends on something missing from the input (for
+  example, a time-based join or window needs a watermark but no `WATERMARK` is
+  defined), treat that as its own problem - do not silently assume it.
+
+**2. Write the report in this structure:**
+
+```
+# Review: <short name of the query>
+
+One line: what the query does + the headline problem.
+
+## Summary
+
+A table of every problem found, highest severity first:
+
+| # | Problem | Severity | Rule | Jump |
+|---|---------|----------|------|------|
+| 1 | ... | high | [rule-id](path) | [#1](#1-...) |
+
+## Paths
+
+The ordered ways to fix things. Problems usually chain (one fix needs another
+done first), so group them into paths instead of listing them flat. Mark one
+recommended.
+
+### Path A - <name> (recommended)
+1. step (-> which problems it fixes)
+2. step
+...
+
+### Path B - <name>
+1. step
+...
+
+## Details
+
+One section per problem from the Summary, in the same order. Each has: where it
+shows up, why it hurts, the fix with corrected SQL, and the Flink reasoning so
+the reader learns something.
+```
+
+Pick the recommended path by what fixes the root cause, not just what caps the
+symptom. A fallback that only bounds state (e.g. TTL) is rarely the recommended
+path when a semantic fix (temporal / lookup join, windowing) exists.
+
+### Output style
+
+Write in caveman lite: drop filler words and pleasantries, keep articles and
+normal sentence structure so it stays easy to read. Keep all technical detail
+exact. Keep code blocks as normal, valid SQL.
+
 ## Jump
 
 - [SQL rules](#sql-rules) - need only SQL text
