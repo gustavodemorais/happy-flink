@@ -21,7 +21,7 @@ N tables = N-1 join nodes (or more). Each hold state both inputs. Intermediate r
 - bound every join in chain (interval / temporal / lookup) - see [join-unbounded-state](join-unbounded-state.md)
 - use MultiJoin operator if Flink version support it - one operator, shared state, less duplication than join chain. Check plan for single multi-way join node vs chain.
 - order joins so smallest / most-filtered side join first - shrink intermediate state
-- push filters before joins so each join see fewer rows - see [filter-pushdown](filter-pushdown.md)
+- push filters before joins so each join see fewer rows - see [filter-pushdown](../sql/filter-pushdown.md)
 - set state TTL on join state - see [state-ttl](state-ttl.md)
 
 Check `EXPLAIN` - count `Join` nodes. Many stacked = this rule.
