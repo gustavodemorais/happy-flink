@@ -1,84 +1,26 @@
-All rules checked. Here's the review.
-
 # Review: customers JOIN orders (regular join)
 
-Enriches each order with its customer via plain regular equi-join on `customer_id`. Both Kafka sources unbounded, join keeps both sides in state forever with no TTL and no time bound - state grows without limit.
+`SELECT *` regular join of two unbounded Kafka streams on `customer_id`. Both join inputs kept in state forever, no TTL, no time bound, no watermark. State grow without ceiling.
 
 ## Summary
 
 | # | Problem | Severity | Rule | Jump |
 |---|---------|----------|------|------|
-| 1 | Regular join, both sides unbounded, `ttl=0 ms` | high | [join-unbounded-state](plan/join-unbounded-state.md) | [#1](#1-unbounded-join-state) |
-| 2 | `customers` is a dimension - should be temporal join | high | [temporal-join](sql/temporal-join.md) | [#2](#2-should-be-temporal-join) |
-| 3 | No `WATERMARK` on either table - blocks temporal/interval fix | high | [require-watermark](sql/require-watermark.md) | [#3](#3-no-watermark) |
-| 4 | Join state has no TTL (fallback bound only) | high | [state-ttl](plan/state-ttl.md) | [#4](#4-no-state-ttl) |
+| 1 | Regular join, unbounded state both sides | high | [join-unbounded-state](plan/join-unbounded-state.md) | [#1](#1-regular-join-unbounded-state) |
+| 2 | No watermark on either source - blocks temporal/interval fix | high | [require-watermark](sql/require-watermark.md) | [#2](#2-no-watermark) |
+| 3 | Join state TTL = 0 ms (no cleanup) | high | [state-ttl](plan/state-ttl.md) | [#3](#3-join-state-ttl--0-ms) |
 
-All four are the same root knot: a regular join with nothing to bound it. Fix the semantics (#2 + #3) and #1/#4 fall away.
+Root cause = #1. `customers` is a dimension (`customer_id`, `name`); `orders` is the fact stream. Right fix = temporal join, which needs watermark (#2 first). TTL (#3) is fallback only.
 
 ## Paths
 
 ### Path A - Temporal join (recommended)
 
-Fixes root cause. `customers` is a slowly-changing dimension; you only need the latest version per `customer_id`, not every customer row ever. Temporal join keeps right side bounded to one version per key.
+`customers` looks like a slowly-changing dimension keyed by `customer_id`. Join `orders` against the latest customer version per key -> customer state bounded to one row per key, order state dropped after match.
 
-1. Add primary key + version time + watermark to `customers` (-> #3, makes it a versioned table).
-2. Add watermark to `orders.order_time` (-> #3).
-3. Rewrite as event-time temporal join, `orders` probe side (-> #2, #1, #4).
-
-Result: dim state = one row per active customer key, order state bounded by watermark. No TTL guessing.
-
-### Path B - Lookup join
-
-Only if `customers` actually lives in an external queryable store (JDBC, HBase) and Kafka here is a stand-in. Then no Flink state for the dim at all - Flink queries per row + cache. Needs the source swapped to a lookup connector + a proctime attribute on `orders`. Not applicable while `customers` is Kafka.
-
-### Path C - State TTL (fallback)
-
-Keep the regular join, just cap state: `SET 'table.exec.state.ttl' = '36 h';`. Cheapest, zero query change. But it only bounds the symptom - too short drops still-needed customers (wrong join misses), too long = state still huge. Use only if temporal semantics genuinely don't fit.
-
-## Details
-
-### #1 Unbounded join state
-
-Where: plan node `id 10`, `Join(joinType=[InnerJoin], ..., leftInputSpec=[NoUniqueKey], rightInputSpec=[NoUniqueKey])`, and `state` block shows `"ttl" : "0 ms"` for both `leftState` and `rightState`. Both sources `"bounded" : "false"`.
-
-Why it hurts: regular join buffers every left and right row to match future arrivals from the other side. `NoUniqueKey` both sides = no per-key collapse, every row retained. State only grows -> checkpoint size grows, slow checkpoints, slow restore, eventual OOM. No time attribute in the join = no point where Flink can ever evict.
-
-Fix: give the join a bound - temporal (Path A), interval, or TTL (Path C). See [join-unbounded-state](plan/join-unbounded-state.md).
-
-### #2 Should be temporal join
-
-Where: SQL line 19, `customers c JOIN orders o ON c.customer_id = o.customer_id`. `customers` (customer_id, name) is a dimension; `orders` carries the event time `order_time` - classic fact-enriches-from-dim.
-
-Why it hurts: regular join stores all dim versions forever. The temporal-join rule notes switching to a temporal join can cut join state dramatically, from huge to small, because only the latest version per key is kept.
-
-Fix: event-time temporal join with `orders` as probe side and `customers` as a versioned table (PK = `customer_id` + event-time watermark).
-
-Before:
-
-```sql
-SELECT * FROM customers c JOIN orders o ON c.customer_id = o.customer_id;
-```
-
-After (with the DDL changes from #3):
-
-```sql
-SELECT o.order_id, o.customer_id, o.amount, o.order_time, c.name
-FROM orders o
-JOIN customers FOR SYSTEM_TIME AS OF o.order_time AS c
-  ON o.customer_id = c.customer_id;
-```
-
-Note: drop `SELECT *` - it currently emits `customer_id` twice (`customer_id` and `customer_id0` in the output type). Project the columns you need.
-
-See [temporal-join](sql/temporal-join.md).
-
-### #3 No watermark
-
-Where: both `CREATE TABLE` (lines 1-17). Neither table defines `WATERMARK`. `order_time` is a plain `TIMESTAMP(3)`, not a time attribute; `customers` has no version time at all.
-
-Why it hurts: the recommended fix (temporal join, also interval join) requires watermarks on both sides. Without them the temporal join can't be planned - this blocks Path A. The INDEX review step is explicit: a fix that needs a watermark when none is defined is its own problem, not a silent assumption.
-
-Fix: make `customers` a versioned table (PK + version column + watermark) and add a watermark to `orders`.
+1. Add PK + event-time watermark to `customers` -> makes it a versioned table (-> #2, enables #1)
+2. Add watermark to `orders` on `order_time` (-> #2)
+3. Rewrite as `FOR SYSTEM_TIME AS OF o.order_time` (-> #1, #3)
 
 ```sql
 CREATE TABLE customers (
@@ -102,18 +44,83 @@ CREATE TABLE orders (
   'connector' = 'kafka',
   'topic' = 'orders'
 );
+
+SELECT o.order_id, o.customer_id, o.amount, o.order_time, c.name
+FROM orders o
+JOIN customers FOR SYSTEM_TIME AS OF o.order_time AS c
+  ON o.customer_id = c.customer_id;
 ```
 
-A versioned `customers` needs a changelog source (`upsert-kafka` or a CDC connector) so Flink tracks versions per PK; a plain append Kafka topic gives an append-only "versioned view" keyed by PK + watermark. See [require-watermark](sql/require-watermark.md).
+Note: temporal join needs a versioned right side (PK + watermark). `customers` has no event-time column today -> added `update_time`. If `customers` is truly static, prefer Path B (lookup join).
 
-### #4 No state TTL
+### Path B - Lookup join (if customers lives in external DB)
 
-Where: plan `id 10`, `"ttl" : "0 ms"` on both join states. `0 ms` = TTL disabled.
+If `customers` is a table in an external store (JDBC, etc.), not a Kafka stream, join via processing-time lookup. Zero Flink join state - right side queried on demand.
 
-Why it hurts: even discounting the dimension semantics, a stateful operator with no TTL and no window keeps state for every key ever seen. High-cardinality `customer_id` = unbounded entries, none evicted.
+1. Define `customers` as a lookup connector (jdbc/hbase/...) with PK
+2. Add processing-time attr to `orders`
+3. Join `FOR SYSTEM_TIME AS OF o.proctime`
 
-Fix: Path A removes the need (temporal join bounds state by version + watermark). If you must keep the regular join, set `table.exec.state.ttl` as in Path C - but tune carefully, too short drops customers still receiving orders and silently misses joins. See [state-ttl](plan/state-ttl.md).
+```sql
+CREATE TABLE customers (
+  customer_id BIGINT,
+  name STRING,
+  PRIMARY KEY (customer_id) NOT ENFORCED
+) WITH (
+  'connector' = 'jdbc',
+  'url' = '...',
+  'table-name' = 'customers'
+);
 
----
+CREATE TABLE orders (
+  order_id BIGINT,
+  customer_id BIGINT,
+  amount INT,
+  order_time TIMESTAMP(3),
+  proctime AS PROCTIME()
+) WITH (
+  'connector' = 'kafka',
+  'topic' = 'orders'
+);
 
-Bottom line: this is one regular-join-on-an-unbounded-stream problem wearing four hats. Go Path A - add the watermarks/PK (#3), rewrite as a temporal join (#2), and the unbounded-state and TTL issues (#1, #4) resolve themselves.
+SELECT o.order_id, o.customer_id, o.amount, o.order_time, c.name
+FROM orders o
+JOIN customers FOR SYSTEM_TIME AS OF o.proctime AS c
+  ON o.customer_id = c.customer_id;
+```
+
+### Path C - Keep regular join, cap with TTL (fallback)
+
+Only if both sides are genuinely streams that update independently and you need full bi-directional join semantics. Does not fix root cause - just bounds state by idle time. Risk: drop state still needed -> miss matches.
+
+```sql
+SET 'table.exec.state.ttl' = '36 h';
+
+SELECT * FROM customers c JOIN orders o ON c.customer_id = o.customer_id;
+```
+
+## Details
+
+### #1 Regular join, unbounded state
+
+Where: plan node `id 10`, `Join(joinType=[InnerJoin] ... leftInputSpec=[NoUniqueKey], rightInputSpec=[NoUniqueKey])`. Both sources `"bounded" : "false"`. No time predicate in join condition (`ON c.customer_id = o.customer_id` only).
+
+Why it hurts: regular join buffers every row from both sides forever to match future arrivals. `NoUniqueKey` both sides = no dedup, every input row stored. State grows with total input -> slow/big checkpoints, slow restore, eventual OOM.
+
+Fix: convert to temporal (Path A) or lookup (Path B) join. Temporal right side keeps only latest version per key; lookup keeps no Flink state at all. Both need the PK/time setup shown above.
+
+### #2 No watermark
+
+Where: both `CREATE TABLE` (input.sql lines 1-17) - no `WATERMARK` clause. `orders.order_time` is a plain `TIMESTAMP(3)`, not a time attribute.
+
+Why it hurts: temporal and interval joins fire on event time. Without a watermark there is no time attribute -> `FOR SYSTEM_TIME AS OF o.order_time` won't compile, and any interval-join rewrite never advances. So #2 must be fixed before #1 can be fixed semantically.
+
+Fix: add `WATERMARK FOR <ts> AS <ts> - INTERVAL '5' SECOND` to each source (shown in Path A). Keep lateness < expected gap. Path B sidesteps this using processing time instead.
+
+### #3 Join state TTL = 0 ms
+
+Where: plan.json `id 10`, `"state"` array - `leftState` and `rightState` both `"ttl" : "0 ms"`. 0 = never expire.
+
+Why it hurts: confirms no cleanup point. Combined with #1, state is strictly monotonic growth.
+
+Fix: a semantic join (Path A/B) removes the need for TTL entirely. If you must keep the regular join (Path C), set `table.exec.state.ttl` larger than the longest expected gap between matching customer/order events - too short drops still-needed rows and silently loses joins.

@@ -48,9 +48,17 @@ recommended.
 2. step
 ...
 
+```sql
+-- the final, runnable query for this path (copy-paste ready)
+```
+
 ### Path B - <name>
 1. step
 ...
+
+```sql
+-- the final, runnable query for this path
+```
 
 ## Details
 
@@ -62,6 +70,10 @@ the reader learns something.
 Pick the recommended path by what fixes the root cause, not just what caps the
 symptom. A fallback that only bounds state (e.g. TTL) is rarely the recommended
 path when a semantic fix (temporal / lookup join, windowing) exists.
+
+End each path with the final runnable query so the user can copy-paste and try
+it. If the path also needs DDL changes (a new PK, a watermark), say so in the
+steps and include the changed `CREATE TABLE` in the block too, so it runs as-is.
 
 ### Output style
 
