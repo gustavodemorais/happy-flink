@@ -1,0 +1,17 @@
+== Abstract Syntax Tree ==
+LogicalSink(table=[default_catalog.default_database.deduped_users], fields=[user_id, EXPR$1, EXPR$2])
++- LogicalAggregate(group=[{0}], EXPR$1=[FIRST_VALUE($1)], EXPR$2=[FIRST_VALUE($2)])
+   +- LogicalProject(user_id=[$0], name=[$1], email=[$2])
+      +- LogicalTableScan(table=[[default_catalog, default_database, users]])
+
+== Optimized Physical Plan ==
+Sink(table=[default_catalog.default_database.deduped_users], fields=[user_id, EXPR$1, EXPR$2])
++- GroupAggregate(groupBy=[user_id], select=[user_id, FIRST_VALUE(name) AS EXPR$1, FIRST_VALUE(email) AS EXPR$2])
+   +- Exchange(distribution=[hash[user_id]])
+      +- TableSourceScan(table=[[default_catalog, default_database, users, project=[user_id, name, email], metadata=[]]], fields=[user_id, name, email])
+
+== Optimized Execution Plan ==
+Sink(table=[default_catalog.default_database.deduped_users], fields=[user_id, EXPR$1, EXPR$2])
++- GroupAggregate(groupBy=[user_id], select=[user_id, FIRST_VALUE(name) AS EXPR$1, FIRST_VALUE(email) AS EXPR$2])
+   +- Exchange(distribution=[hash[user_id]])
+      +- TableSourceScan(table=[[default_catalog, default_database, users, project=[user_id, name, email], metadata=[]]], fields=[user_id, name, email])
