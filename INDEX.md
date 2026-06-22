@@ -104,6 +104,7 @@ Cheapest. You have the SQL text and nothing else.
 | Preserve upsert key in join | high | sql | [open](sql/preserve-upsert-key-in-join.md) |
 | Sink ON CONFLICT clause | medium | sql | [open](sql/sink-on-conflict.md) |
 | Window / time join needs watermark | high | sql | [open](sql/require-watermark.md) |
+| Non-determinism in update pipeline | high | sql | [open](sql/nondeterministic-in-update-pipeline.md) |
 
 ## Plan rules
 

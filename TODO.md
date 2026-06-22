@@ -14,7 +14,6 @@ Planned + open work. Keep each item small. Done -> delete the line.
 
 Common, correctness/state impact, vanilla Flink.
 
-- [ ] `nondeterministic-in-update-pipeline` - NOW / CURRENT_TIMESTAMP / RAND / non-det UDF in an updating (upsert/retract) pipeline = silently wrong results. NOTE: the planner's NDU check is OFF by default (`table.optimizer.non-deterministic-update.strategy = IGNORE`); rule fix is (a) make the column deterministic, (b) set strategy `TRY_RESOLVE` so the planner catches it. Append-only pipelines are fine - don't false-alarm. Merges the old nondeterministic-fn-in-upsert + nondeterministic-col-in-sink ideas.
 - [ ] `over-window-append-only` - OVER window only valid on append-only input.
 - [ ] `dedup-order-asc` - dedup `ORDER BY ts DESC` emits retractions; ASC keeps-first stays append-only.
 - [ ] `cross-join-no-predicate` (plan) - predicate-less join explodes cardinality + state.
