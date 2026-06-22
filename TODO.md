@@ -1,22 +1,73 @@
 # TODO
 
-Planned + open work. Keep short. Done -> delete line.
+Planned + open work. Keep each item small. Done -> delete the line.
 
-## General changes
+## Concepts
 
-- Changelog mode and watermark awareness. These are two concepts that are not well understood by users, and they are important for understanding the results of the tool. We need to make sure that the rules are aware of these concepts and can provide useful feedback to users. For example, some operators and functions only accept append input and some accept both (append + updating). Some operators are sensitive to watermarks, while others are not. The rules should be able to detect these situations and provide appropriate feedback. The goal is to help users understand these concepts a bit more in a very easy and illustrative way and give good explanations if asked further. Maybe we want to create a content folder where we can put some content about these concepts and link to it from the tool.
+- [ ] Add content explaining changelog mode (append vs updating) in simple terms.
+- [ ] Add content explaining watermarks and which operators are sensitive to them.
+- [ ] Make rules aware which operators accept append-only vs updating input.
+- [ ] Make rules aware which operators are watermark-sensitive.
+- [ ] Create a `content/` folder for these explainers; link to it from the rules.
 
-- If we mention any number or use any material in the rules, we should provide a link to the source of that number or material.
+## Rules - new (high priority)
 
-## Rules
+Common, correctness/state impact, vanilla Flink.
 
-- [ ] Add a TO/FROM Changelog on how to use them to fix, optimize queries etc
-- [ ] More SQL/plan rules from research not yet ported: `delta-join-eligible`, `incremental-three-phase-agg`, `nondeterministic-col-in-sink`, `topn-*` (omit rownum, small N), `enable-changelog-state-backend`, RocksDB tuning set.
-- [ ] Fill 5 runtime stubs: `data-skew`, `backpressure`, `state-size-growth`, `watermark-lag`, `checkpoint-tuning`. Need real metric thresholds + how-to-detect.
-- [ ] Adding rule for processing time temporal join after it's been released
+- [ ] `nondeterministic-in-update-pipeline` - NOW / CURRENT_TIMESTAMP / RAND / non-det UDF in an updating (upsert/retract) pipeline = silently wrong results. NOTE: the planner's NDU check is OFF by default (`table.optimizer.non-deterministic-update.strategy = IGNORE`); rule fix is (a) make the column deterministic, (b) set strategy `TRY_RESOLVE` so the planner catches it. Append-only pipelines are fine - don't false-alarm. Merges the old nondeterministic-fn-in-upsert + nondeterministic-col-in-sink ideas.
+- [ ] `over-window-append-only` - OVER window only valid on append-only input.
+- [ ] `dedup-order-asc` - dedup `ORDER BY ts DESC` emits retractions; ASC keeps-first stays append-only.
+- [ ] `cross-join-no-predicate` (plan) - predicate-less join explodes cardinality + state.
+- [ ] `idle-source-heartbeat` - idle source freezes watermark; heartbeat rows / idle-timeout.
+
+## Rules - new (medium priority)
+
+- [ ] `prefer-window-tvf` - legacy `GROUP BY TUMBLE(...)` harder to optimize than window TVF.
+- [ ] `statement-set-shared-source` - separate INSERTs re-read source N times; `EXECUTE STATEMENT SET` shares the read.
+- [ ] `unbounded-order-by` - streaming ORDER BY on a non-time column is invalid / unbounded.
+- [ ] `dedup-before-array-agg` - ARRAY_AGG over un-deduped input regrows state; dedup first.
+- [ ] `changelog-mode-sink-compat` (plan) - operator output changelog mode incompatible with sink.
+- [ ] `to-from-changelog` - using TO_CHANGELOG / FROM_CHANGELOG to fix or optimize queries.
+- [ ] `delta-join-eligible`
+- [ ] `incremental-three-phase-agg`
+- [ ] `topn-omit-rownum`
+- [ ] `topn-small-n`
+- [ ] `enable-changelog-state-backend`
+- [ ] RocksDB tuning rule set.
+- [ ] Processing-time temporal join rule (after it is released).
+
+## Rules - new (verify vendor-neutral first)
+
+Maybe Confluent-specific syntax, not vanilla Flink - confirm before adding.
+
+- [ ] `value-fields-include-pk` - PK excluded from Kafka value (`except-key`) breaks GROUP BY / upsert.
+- [ ] `distributed-by-matches-pk` - bucket key must equal PK for upsert; else skew.
+- [ ] `snapshot-mode-for-backfill` - one-shot replay keeps growing state; snapshot-mode reads to latest offset.
+
+## Rules - fill stubs
+
+- [ ] `data-skew` - real metric thresholds + how to detect.
+- [ ] `backpressure` - real metric thresholds + how to detect.
+- [ ] `state-size-growth` - real metric thresholds + how to detect.
+- [ ] `watermark-lag` - real metric thresholds + how to detect.
+- [ ] `checkpoint-tuning` - fold in: incremental checkpoints, interval >= ~1.5x p99 duration, unaligned under backpressure.
+
+## Rules - new runtime / deploy
+
+- [ ] `source-parallelism-vs-partitions` - source parallelism != Kafka partition count = idle subtasks or underuse.
+- [ ] `rocksdb-block-cache-vs-managed` - block-cache-size > managed memory = OOM / ineffective cache.
+- [ ] `pod-mem-below-process-size` - pod memory limit < `taskmanager.memory.process.size` = OOMKill.
+- [ ] `ephemeral-checkpoint-storage` - local / emptyDir checkpoint dir loses state on pod restart; use durable store.
 
 ## Examples
 
-- [ ] Add more examples, one per rule family: aggregation (COUNT DISTINCT skew), dedup, multi-join, upsert/changelog, window.
-- [ ] Example for a query with NO problems - check tool not invent issues.
-- [ ] Tune output format more across examples once we have several.
+- [ ] Aggregation example (COUNT DISTINCT skew).
+- [ ] Multi-join example.
+- [ ] Upsert / changelog example.
+- [ ] Window example.
+- [ ] Example with NO problems - check the tool does not invent issues.
+- [ ] Tune output format across examples once we have several.
+
+## Conventions
+
+- [ ] Any number or borrowed material in a rule must link to its source.
