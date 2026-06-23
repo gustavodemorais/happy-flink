@@ -14,9 +14,6 @@ Planned + open work. Keep each item small. Done -> delete the line.
 
 Common, correctness/state impact, vanilla Flink.
 
-- [ ] `over-window-append-only` - OVER window only valid on append-only input. Broaden: any append-only op (OVER/LAG/MATCH_RECOGNIZE) fed updating input fails the same way.
-- [ ] `dedup-order-asc` - dedup `ORDER BY ts DESC` emits retractions; ASC keeps-first stays append-only.
-- [ ] `cross-join-no-predicate` (plan) - predicate-less join explodes cardinality + state.
 - [ ] `idle-source-heartbeat` - idle source freezes watermark; heartbeat rows / idle-timeout. Top demand: window/join "emits nothing." Cover idle partition, oversized watermark delay, heartbeat via UNION ALL, watermark alignment across sides.
 - [ ] `watermark-not-advancing` - diagnostic: window/join/dedup produces no output because watermark stalls (idle partition, bad watermark column/expression, delay too large). Routes to `idle-source-heartbeat` / `require-watermark`.
 - [ ] `regular-join-loses-pk` (plan) - regular/outer join drops PK unless join condition uses both sides' PKs = planner adds dedup / SinkUpsertMaterializer = high state. Extends `preserve-upsert-key-in-join`.
@@ -59,6 +56,8 @@ Maybe Confluent-specific syntax, not vanilla Flink - confirm before adding.
 - [ ] `snapshot-mode-for-backfill` - one-shot replay keeps growing state; snapshot-mode reads to latest offset.
 
 ## Rules - fill stubs
+
+Not sure if these will be added. Glad if other contributors pick runtime related rules.
 
 - [ ] `data-skew` - real metric thresholds + how to detect.
 - [ ] `backpressure` - real metric thresholds + how to detect.
