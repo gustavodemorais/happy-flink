@@ -22,6 +22,8 @@ Define `WATERMARK FOR ts AS ...` on the source table. Keep out-of-orderness inte
 
 - add watermark in `CREATE TABLE` or via `ALTER TABLE ... ADD WATERMARK`
 - lateness interval < window size
+- if an idle / sparse partition freezes the watermark, see [idle-source-heartbeat](idle-source-heartbeat.md)
+- output empty and cause unclear? start at [watermark-not-advancing](watermark-not-advancing.md)
 - see [watermark-lag](../runtime/watermark-lag.md) for idle-partition stalls at runtime
 
 ## Example
