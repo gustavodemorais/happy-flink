@@ -8,12 +8,13 @@ Planned + open work. Keep each item small. Done -> delete the line.
 - [ ] Add content explaining watermarks and which operators are sensitive to them.
 - [ ] Make rules aware which operators accept append-only vs updating input.
 - [ ] Make rules aware which operators are watermark-sensitive.
-- [ ] Create a `content/` folder for these explainers; link to it from the rules.
+- [ ] Create a `skills/flink-sql-optimizer/references/content/` folder for these explainers; link to it from the rules.
 
 ## Rules - new (high priority)
 
 Common, correctness/state impact, vanilla Flink.
 
+- [ ] Add rule plan/cross-join-no-predicate (join with empty join keys + SINGLETON exchange) - was listed in the index but never written.
 - [ ] `idle-source-heartbeat` - idle source freezes watermark; heartbeat rows / idle-timeout. Top demand: window/join "emits nothing." Cover idle partition, oversized watermark delay, heartbeat via UNION ALL, watermark alignment across sides.
 - [ ] `watermark-not-advancing` - diagnostic: window/join/dedup produces no output because watermark stalls (idle partition, bad watermark column/expression, delay too large). Routes to `idle-source-heartbeat` / `require-watermark`.
 - [ ] `regular-join-loses-pk` (plan) - regular/outer join drops PK unless join condition uses both sides' PKs = planner adds dedup / SinkUpsertMaterializer = high state. Extends `preserve-upsert-key-in-join`.
@@ -33,8 +34,6 @@ Common, correctness/state impact, vanilla Flink.
 - [ ] `incremental-three-phase-agg`
 - [ ] `topn-omit-rownum`
 - [ ] `topn-small-n`
-- [ ] `enable-changelog-state-backend`
-- [ ] RocksDB tuning rule set.
 - [ ] Processing-time temporal join rule (after it is released).
 - [ ] `dedup-needs-ttl` - dedup / DISTINCT keeps one entry per key forever without state TTL.
 - [ ] `dedup-order-by-time-attribute` - dedup `ORDER BY` a payload column != row time with out-of-order arrival leaks duplicates; define watermark on the payload column.
@@ -45,6 +44,7 @@ Common, correctness/state impact, vanilla Flink.
 - [ ] `full-outer-latest-state` - no FULL-OUTER temporal variant; `UNION ALL` + `LAST_VALUE(...) OVER (PARTITION BY key ORDER BY rowtime)` keeps last value per key.
 - [ ] `anti-join-not-exists` - `LEFT JOIN ... WHERE rhs IS NULL` / correlated `NOT EXISTS` can return nothing or hit planner errors; `GROUP BY ... HAVING COUNT(key)=0` or `NOT IN`.
 - [ ] `json-type-untypable` - polymorphic JSON (`anyOf`/`oneOf`/`allOf`, open object, tuple arrays) has no fixed SQL type; declare STRING + `JSON_VALUE`/`JSON_QUERY`, or type the schema.
+- [ ] `udf-call-multiplied-by-planner` (plan) - UDF output reused across many projections is duplicated per-column (calc merge), re-evaluating + re-deserializing each time.
 - [ ] `ptf-for-stateful-patterns` - timeout/throttle (emit-first-then-suppress), changelog materialization, dynamic UNNEST need a PTF with timers/state, not pure SQL or TTL.
 
 ## Rules - new (verify vendor-neutral first)
@@ -55,28 +55,7 @@ Maybe Confluent-specific syntax, not vanilla Flink - confirm before adding.
 - [ ] `distributed-by-matches-pk` - bucket key must equal PK for upsert; else skew.
 - [ ] `snapshot-mode-for-backfill` - one-shot replay keeps growing state; snapshot-mode reads to latest offset.
 
-## Rules - fill stubs
-
-Not sure if these will be added. Glad if other contributors pick runtime related rules.
-
-- [ ] `data-skew` - real metric thresholds + how to detect.
-- [ ] `backpressure` - real metric thresholds + how to detect.
-- [ ] `state-size-growth` - real metric thresholds + how to detect.
-- [ ] `watermark-lag` - real metric thresholds + how to detect.
-- [ ] `checkpoint-tuning` - fold in: incremental checkpoints, interval >= ~1.5x p99 duration, unaligned under backpressure.
-
-## Rules - new runtime / deploy
-
-- [ ] `source-parallelism-vs-partitions` - source parallelism != Kafka partition count = idle subtasks or underuse.
-- [ ] `rocksdb-block-cache-vs-managed` - block-cache-size > managed memory = OOM / ineffective cache.
-- [ ] `pod-mem-below-process-size` - pod memory limit < `taskmanager.memory.process.size` = OOMKill.
-- [ ] `ephemeral-checkpoint-storage` - local / emptyDir checkpoint dir loses state on pod restart; use durable store.
-- [ ] `idle-writer-txn-loss` - EOS Kafka writer idle > transaction.timeout.ms = transaction expires = silent data loss on restart; keep writer active.
-- [ ] `eos-commit-latency-floor` - exactly-once sink emits only on checkpoint = latency floor ~= checkpoint interval; relax delivery guarantee for lower latency.
-- [ ] `state-ttl-lazy-floor-creep` - bounded-state job state still creeps: TTL eviction is lazy (compaction-driven) and a growing keyspace raises the floor; distinguish from a real leak.
-- [ ] `udf-call-multiplied-by-planner` - UDF output reused across many projections is duplicated per-column (calc merge), re-evaluating + re-deserializing each time.
-
-## Examples
+## Evals
 
 - [ ] Aggregation example (COUNT DISTINCT skew).
 - [ ] Multi-join example.
