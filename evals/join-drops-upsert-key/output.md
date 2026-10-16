@@ -6,9 +6,9 @@ Join `users` x `orders` on `user_id` to feed upsert sink `enriched_orders`. Join
 
 | # | Problem | Severity | Rule | Jump |
 |---|---------|----------|------|------|
-| 1 | Join on `user_id` drops orders upsert key; output upsert key empty | high | [preserve-upsert-key-in-join](../../skills/flink-sql-optimizer/references/sql/preserve-upsert-key-in-join.md) | [#1](#1-join-drops-upsert-key) |
-| 2 | Query upsert key != sink PK; planner rejects INSERT | high | [sink-on-conflict](../../skills/flink-sql-optimizer/references/sql/sink-on-conflict.md) | [#2](#2-upsert-key-vs-sink-pk-mismatch) |
-| 3 | Sink PK must match preserved upsert key | high | [align-sink-pk](../../skills/flink-sql-optimizer/references/sql/align-sink-pk.md) | [#3](#3-align-sink-pk) |
+| 1 | Join on `user_id` drops orders upsert key; output upsert key empty | high | [preserve-upsert-key-in-join](../../skills/flink-sql-table-api-optimizer/references/sql/preserve-upsert-key-in-join.md) | [#1](#1-join-drops-upsert-key) |
+| 2 | Query upsert key != sink PK; planner rejects INSERT | high | [sink-on-conflict](../../skills/flink-sql-table-api-optimizer/references/sql/sink-on-conflict.md) | [#2](#2-upsert-key-vs-sink-pk-mismatch) |
+| 3 | Sink PK must match preserved upsert key | high | [align-sink-pk](../../skills/flink-sql-table-api-optimizer/references/sql/align-sink-pk.md) | [#3](#3-align-sink-pk) |
 
 Problems chain. #1 is root cause. #2 is the symptom (the error). #3 is the other half of the alignment fix.
 

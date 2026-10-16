@@ -8,7 +8,7 @@ Planned + open work. Keep each item small. Done -> delete the line.
 - [ ] Add content explaining watermarks and which operators are sensitive to them.
 - [ ] Make rules aware which operators accept append-only vs updating input.
 - [ ] Make rules aware which operators are watermark-sensitive.
-- [ ] Create a `skills/flink-sql-optimizer/references/content/` folder for these explainers; link to it from the rules.
+- [ ] Create a `skills/flink-sql-table-api-optimizer/references/content/` folder for these explainers; link to it from the rules.
 
 ## Rules - new (high priority)
 

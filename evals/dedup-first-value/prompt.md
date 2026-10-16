@@ -1,4 +1,4 @@
-Read `skills/flink-sql-optimizer/SKILL.md` and follow the review steps there.
+Read `skills/flink-sql-table-api-optimizer/SKILL.md` and follow the review steps there.
 
 My query and its compiled plan are in these files - read them:
 

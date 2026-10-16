@@ -10,28 +10,11 @@ Rules cover the usual pain: slow jobs, state that only grows, state that never s
 
 **Scope:** SQL and plan-level analysis.
 
-## Who it's for
-
-You run Flink SQL or Table API and want to know why a job is slow or why its state keeps growing, and you want a fix.
-
-## How to use it
-
-1. Get the skill into your AI, any of these works:
-   - Install it as a skill: `npx skills add gustavodemorais/happy-flink`
-   - Copy [`skills/flink-sql-optimizer`](skills/flink-sql-optimizer) into `~/.claude/skills/` (or the equivalent skills directory of your agent)
-   - Or just point any AI at [`skills/flink-sql-optimizer/SKILL.md`](skills/flink-sql-optimizer/SKILL.md)
-2. Provide the AI with the data you have on hand, ideally both:
-   1. only SQL text -> `references/sql/`
-   2. an EXPLAIN or compiled plan -> `references/plan/`
-3. The AI will scan the rules and provide you with a list of possible problems and fixes and is ready to explain the reasoning behind each!
-
-Cheaper inputs catch less; richer inputs catch more.
-
 ## Example
 
-With the skill installed (or pointing your AI at `skills/flink-sql-optimizer/SKILL.md`), ask:
+With the skill installed (or pointing your AI at https://github.com/gustavodemorais/happy-flink), ask:
 
-> Use the flink-sql-optimizer skill and help me with this query.
+> Help me optimize this Flink SQL query.
 >
 > ```sql
 > SELECT * FROM customers c JOIN orders o ON c.customer_id = o.customer_id;
@@ -43,10 +26,28 @@ is a dimension), plus the watermark you need to make that fix work.
 
 See [evals/](evals/) for full runs with SQL, compiled plan, and saved output.
 
+## Who it's for
+
+You run Flink SQL or Table API and want to know why a job is slow or why its state keeps growing, and you want a fix.
+
+## How to use it
+
+1. Get the skill into your AI, any of these works:
+   - Install it as a skill: `npx skills add gustavodemorais/happy-flink`
+   - Copy [`skills/flink-sql-table-api-optimizer`](skills/flink-sql-table-api-optimizer) into `~/.claude/skills/` (or the equivalent skills directory of your agent)
+   - Or just point any AI at [`skills/flink-sql-table-api-optimizer/SKILL.md`](skills/flink-sql-table-api-optimizer/SKILL.md)
+2. Provide the AI with the data you have on hand, ideally both:
+   1. only SQL or Table API code -> `references/sql/`
+   2. an EXPLAIN or compiled plan -> `references/plan/`
+3. The AI will scan the rules and provide you with a list of possible problems and fixes and is ready to explain the reasoning behind each!
+
+Cheaper inputs catch less; richer inputs catch more.
+
+
 ## Layout
 
 ```
-skills/flink-sql-optimizer/
+skills/flink-sql-table-api-optimizer/
   SKILL.md            # entry point: review steps + rule index
   references/
     sql/              # rules you can check from SQL text alone

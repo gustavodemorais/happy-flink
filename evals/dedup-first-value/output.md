@@ -6,9 +6,9 @@ Query dedups users to one row per `user_id` using `GROUP BY` + `FIRST_VALUE`. Wo
 
 | # | Problem | Severity | Rule | Jump |
 |---|---------|----------|------|------|
-| 1 | `GroupAggregate` state unbounded, `ttl=0 ms` | high | [state-ttl](../../skills/flink-sql-optimizer/references/plan/state-ttl.md) | [#1](#1-no-ttl-on-groupaggregate) |
-| 2 | Dedup via `FIRST_VALUE` not cheap `Deduplicate` operator | medium | [dedup-row-number](../../skills/flink-sql-optimizer/references/sql/dedup-row-number.md) | [#2](#2-dedup-should-use-row_number) |
-| 3 | Cheap `Deduplicate` path needs time attribute - no `WATERMARK` defined | high | [require-watermark](../../skills/flink-sql-optimizer/references/sql/require-watermark.md) | [#3](#3-no-time-attribute-for-deduplicate) |
+| 1 | `GroupAggregate` state unbounded, `ttl=0 ms` | high | [state-ttl](../../skills/flink-sql-table-api-optimizer/references/plan/state-ttl.md) | [#1](#1-no-ttl-on-groupaggregate) |
+| 2 | Dedup via `FIRST_VALUE` not cheap `Deduplicate` operator | medium | [dedup-row-number](../../skills/flink-sql-table-api-optimizer/references/sql/dedup-row-number.md) | [#2](#2-dedup-should-use-row_number) |
+| 3 | Cheap `Deduplicate` path needs time attribute - no `WATERMARK` defined | high | [require-watermark](../../skills/flink-sql-table-api-optimizer/references/sql/require-watermark.md) | [#3](#3-no-time-attribute-for-deduplicate) |
 
 ## Paths
 

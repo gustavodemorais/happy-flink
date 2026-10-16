@@ -8,13 +8,13 @@ compiled plan, and the tool scans the rules and reports each problem with its
 fix and the reasoning behind it.
 
 See [README.md](README.md) for the project goals and
-[skills/flink-sql-optimizer/SKILL.md](skills/flink-sql-optimizer/SKILL.md) for
+[skills/flink-sql-table-api-optimizer/SKILL.md](skills/flink-sql-table-api-optimizer/SKILL.md) for
 the rule map.
 
 ## Layout
 
 ```
-skills/flink-sql-optimizer/
+skills/flink-sql-table-api-optimizer/
   SKILL.md          entry point: frontmatter, review protocol, rule tables
   references/sql/   rules that need only the SQL text (cheapest)
   references/plan/  rules that need an EXPLAIN or compiled plan
@@ -30,11 +30,11 @@ evals/              real inputs with saved outputs, plus run.sh
    trigger.
 
 The protocol lives in `SKILL.md` so a user prompt can stay one line ("use the
-flink-sql-optimizer skill to help with this query"). Keep it there, not in eval
+flink-sql-table-api-optimizer skill to help with this query"). Keep it there, not in eval
 prompts.
 
 Its YAML frontmatter `name` must match the directory name
-(`flink-sql-optimizer`), and its `description` decides when the skill triggers,
+(`flink-sql-table-api-optimizer`), and its `description` decides when the skill triggers,
 so keep the description in sync when adding rule areas.
 
 Troubleshooting live jobs from runtime metrics is out of scope for this skill.
@@ -103,7 +103,7 @@ the report format.
   `claude -p ... --allowedTools Read Glob Grep` (read-only, headless, no context
   from other sessions).
 - `prompt.md` is a minimal user message: it points at
-  `skills/flink-sql-optimizer/SKILL.md` and links the input files. Do not copy
+  `skills/flink-sql-table-api-optimizer/SKILL.md` and links the input files. Do not copy
   the review protocol into it; the protocol lives in `SKILL.md`.
 - The fresh session reads the input files itself. `plan.json` carries signals
   that the EXPLAIN text lacks (`"ttl" : "0 ms"`, `"bounded" : false`, duplicate

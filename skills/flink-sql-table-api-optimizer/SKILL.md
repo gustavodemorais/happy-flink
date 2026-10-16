@@ -1,5 +1,5 @@
 ---
-name: flink-sql-optimizer
+name: flink-sql-table-api-optimizer
 description: >
   Review and optimize Apache Flink SQL and Table API queries. Use when the user
   shares a Flink SQL query, Table API program, EXPLAIN output, or compiled plan
@@ -17,20 +17,26 @@ metadata:
   version: "0.1.0"
 ---
 
-# Flink SQL optimizer
+# Flink SQL and Table API optimizer
 
-A map of Flink SQL optimization rules, plus the protocol for reviewing a query
-with them. Pick rules by the input you have.
+A map of optimization rules for Flink SQL and Table API, plus the protocol for
+reviewing a query with them. Pick rules by the input you have.
+
+SQL and Table API go through the same planner and produce the same plans, so
+every rule applies to both. Rules are written in SQL; see
+[Table API input](#table-api-input) for how to apply them to a Table API
+program.
 
 ## How to review
 
-Use this protocol when a user hands you a Flink SQL query, optionally with its
-EXPLAIN output or compiled plan, and asks for help.
+Use this protocol when a user hands you a Flink SQL query or Table API
+program, optionally with its EXPLAIN output or compiled plan, and asks for
+help.
 
 **1. Analyze.**
 
 - Choose rule tables by the input you have:
-  - SQL text only: SQL rules
+  - SQL text or Table API code only: SQL rules
   - EXPLAIN output or compiled plan: SQL rules and plan rules
 - Scan the `Look here if you see` column of those tables against the input. It
   is each rule's trigger: a SQL pattern or a plan node name. Open only the rule
@@ -65,7 +71,7 @@ block containing the final runnable query for that path. Name them
 
 **`## Details`**: one subsection per problem from the Summary, in the same
 order, with headings that match the Jump anchors. Each covers where the problem
-appears, why it hurts, the fix with corrected SQL, and the underlying Flink
+appears, why it hurts, the fix with corrected SQL or Table API code, and the underlying Flink
 behavior so the reader learns something.
 
 Recommend the path that fixes the root cause, not the one that only limits the
@@ -83,14 +89,28 @@ so it runs as-is.
 Write concisely and precisely. Skip filler and pleasantries, keep technical
 details exact, and keep every SQL block valid and runnable.
 
+## Table API input
+
+- Map each Table API call to its SQL equivalent before scanning the triggers:
+  `join(...)` / `leftOuterJoin(...)` is a regular join, `groupBy(...).select(...)`
+  is a `GROUP BY` aggregate, `distinct()` is `DISTINCT`, `window(...)` and
+  `over(...)` are group and OVER windows, and `joinLateral` with a temporal
+  table function is a temporal join.
+- Plan rules work unchanged: a Table API program yields the same plan nodes.
+  Get the plan with `table.explain()`, or the compiled plan with
+  `table.insertInto("sink").compilePlan().asJsonString()`.
+- Write fixes in the user's API. Where a fix has no Table API equivalent (for
+  example `FOR SYSTEM_TIME AS OF` or query hints), express that part with
+  `tableEnv.sqlQuery(...)`, which returns a `Table`, and continue in Table API.
+
 ## Jump
 
-- [SQL rules](#sql-rules): need only SQL text
+- [SQL rules](#sql-rules): need only SQL text or Table API code
 - [Plan rules](#plan-rules): need EXPLAIN output or a compiled plan
 
 ## SQL rules
 
-Cheapest level: these need only the SQL text.
+Cheapest level: these need only the SQL text or Table API code.
 
 **Joins**
 

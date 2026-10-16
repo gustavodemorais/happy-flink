@@ -6,9 +6,9 @@
 
 | # | Problem | Severity | Rule | Jump |
 |---|---------|----------|------|------|
-| 1 | Regular join, unbounded state both sides | high | [join-unbounded-state](../../skills/flink-sql-optimizer/references/plan/join-unbounded-state.md) | [#1](#1-regular-join-unbounded-state) |
-| 2 | No watermark on either source - blocks temporal/interval fix | high | [require-watermark](../../skills/flink-sql-optimizer/references/sql/require-watermark.md) | [#2](#2-no-watermark) |
-| 3 | Join state TTL = 0 ms (no cleanup) | high | [state-ttl](../../skills/flink-sql-optimizer/references/plan/state-ttl.md) | [#3](#3-join-state-ttl--0-ms) |
+| 1 | Regular join, unbounded state both sides | high | [join-unbounded-state](../../skills/flink-sql-table-api-optimizer/references/plan/join-unbounded-state.md) | [#1](#1-regular-join-unbounded-state) |
+| 2 | No watermark on either source - blocks temporal/interval fix | high | [require-watermark](../../skills/flink-sql-table-api-optimizer/references/sql/require-watermark.md) | [#2](#2-no-watermark) |
+| 3 | Join state TTL = 0 ms (no cleanup) | high | [state-ttl](../../skills/flink-sql-table-api-optimizer/references/plan/state-ttl.md) | [#3](#3-join-state-ttl--0-ms) |
 
 Root cause = #1. `customers` is a dimension (`customer_id`, `name`); `orders` is the fact stream. Right fix = temporal join, which needs watermark (#2 first). TTL (#3) is fallback only.
 
